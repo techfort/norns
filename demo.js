@@ -51,6 +51,11 @@ setTimeout(function () {
       counter = 1,
       server = 1;
 
+  /**
+   * Set expiration time for a key in milliseconds
+   * @param {String} key - the datastore key
+   * @param {Number} ms - milliseconds to expiration
+   */
   function setExpire(key, ms) {
     if (!ms) {
       return;
@@ -60,6 +65,13 @@ setTimeout(function () {
     }, ms);
   }
 
+  /**
+   * Sets a key in the datastore to a value and optionally sets expiration time
+   * @param {String} key - the key to be set
+   * @param {*} val - the value paired to the key
+   * @param {Number} [ms] - optional time in milliseconds to expiration
+   * @returns {*} the value set to the key
+   */
   function set(key, val, ms) {
     var event = {
       event: 'set',
@@ -73,10 +85,20 @@ setTimeout(function () {
     return val;
   }
 
+  /**
+   * Gets the value associated to a key
+   * @param {String} key - the key in the datastore
+   */
   function get(key) {
     return store.get(key);
   }
 
+  /**
+   * Removes a value from a list
+   * @param {String} key - the key associated to the list
+   * @param {String} lr - remove to the left with lpop and right with rpop
+   * @returns {Number} the new length of the list
+   */
   function pop(key, lr) {
     if (store.get(key) && Array.isArray(store.get(key))) {
       store.get(key)[lr === 'lpop' ? 'shift' : 'pop']();
@@ -84,18 +106,40 @@ setTimeout(function () {
     return store.get(key).length;
   }
 
+  /**
+   * Remove to the left of a list
+   * @param {String} key - the key associated to the list
+   * @returns {Number} the new length of the list
+   */
   function lpop(key) {
     return pop(key, 'lpop');
   }
 
+  /**
+   * Remove to the right of a list
+   * @param {String} key - the key associated to the list
+   * @returns {Number} the new length of the list
+   */
   function rpop(key) {
     return pop(key, 'rpop');
   }
 
+  /**
+   * Get length a list
+   * @param {String} key - the key associated to the list
+   * @returns {Number} the length of the list
+   */
   function llen(key) {
     return store.get(key).length || new Error('key ' + key + ' is not a list');
   }
 
+  /**
+   * Push value to the right of a list
+   * @param {String} key - the key
+   * @param {*} val - the value to be pushed
+   * @param {boolean} [x] - only push if key exists
+   * @returns {Number} new length of the list
+   */
   function rpush(key, val, x) {
 
     var event = {
@@ -125,15 +169,27 @@ setTimeout(function () {
     return llen(key);
   }
 
+  /**
+   * Push value to the right of a list only if key exists
+   * @param {String} key - the key
+   * @param {*} val - the value to be pushed
+   * @returns {Number} new length of the list
+   */
   function rpushx(key, val) {
     return rpush(key, val, true);
   }
 
+  /**
+   * Get value at 'index' of a list associated with a key
+   * @param {String} key - the key
+   * @param {Number} index - the index
+   * @returns {*} the value at index 'inedx'
+   */
   function lindex(key, index) {
-    var arr = store.get(key);
-    console.log('LIST', arr, arr.length);
-    var computedIndex = index < 0 ? arr.length + index : index;
-    console.log('COMPUTED INDEX:', computedIndex, 'LENGTH: ', arr.length);
+
+    var arr = store.get(key),
+        computedIndex = index < 0 ? arr.length + index : index;
+
     if (computedIndex > arr.length - 1) {
       throw new Error('Index out of range for list at key: [' + key + ']');
     }
@@ -141,6 +197,13 @@ setTimeout(function () {
     return arr[computedIndex];
   }
 
+  /**
+   * Push value to the left of a list
+   * @param {String} key - the key
+   * @param {*} val - the value to be pushed
+   * @param {boolean} [x] - only push if key exists
+   * @returns {Number} new length of the list
+   */
   function lpush(key, val, x) {
 
     var arr = store.get(key);
@@ -171,10 +234,23 @@ setTimeout(function () {
     return llen(key);
   }
 
+  /**
+   * Push value to the right of a list only if key exists
+   * @param {String} key - the key
+   * @param {*} val - the value to be pushed
+   * @returns {Number} new length of the list
+   */
   function lpushx(key, val) {
     return lpush(key, val, true);
   }
 
+  /**
+   * Get a range of values in a list associated with a key
+   * @param {String} key - the key
+   * @param {Number} start - start index
+   * @param {Number} end - end index
+   * @returns {Array} the range of values
+   */
   function lrange(key, start, end) {
     var arr = store.get(key);
     if (!Array.isArray(arr)) {
@@ -186,6 +262,13 @@ setTimeout(function () {
     return copy.splice(start, _end);
   }
 
+  /**
+   * Insert a value before or after a pivot value in a list associated with key
+   * @param {String} key - the key
+   * @param {String} beforeAfter - 'BEFORE' or 'AFTER'
+   * @param {*} pivot - pivot value
+   * @returns {Number} the new length of the list
+   */
   function linsert(key, beforeAfter, pivot, val) {
     var arr = store.get(key);
     if (!Array.isArray(arr)) {

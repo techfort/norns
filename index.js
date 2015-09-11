@@ -86,6 +86,13 @@
     return store.get(key).length || new Error(`key ${key} is not a list`);
   }
 
+  /**
+   * Push value to the right of a list
+   * @param {String} key - the key
+   * @param {*} val - the value to be pushed
+   * @param {boolean} [x] - only push if key exists
+   * @returns {Number} new length of the list
+   */
   function rpush(key, val, x) {
 
     let event = {
@@ -115,10 +122,22 @@
     return llen(key);
   }
 
+  /**
+   * Push value to the right of a list only if key exists
+   * @param {String} key - the key
+   * @param {*} val - the value to be pushed
+   * @returns {Number} new length of the list
+   */
   function rpushx(key, val) {
     return rpush(key, val, true);
   }
 
+  /**
+   * Get value at 'index' of a list associated with a key
+   * @param {String} key - the key
+   * @param {Number} index - the index
+   * @returns {*} the value at index 'inedx'
+   */
   function lindex(key, index) {
 
     let arr = store.get(key),
@@ -131,6 +150,13 @@
     return arr[computedIndex];
   }
 
+  /**
+   * Push value to the left of a list
+   * @param {String} key - the key
+   * @param {*} val - the value to be pushed
+   * @param {boolean} [x] - only push if key exists
+   * @returns {Number} new length of the list
+   */
   function lpush(key, val, x) {
 
     let arr = store.get(key);
@@ -161,10 +187,23 @@
     return llen(key);
   }
 
+  /**
+   * Push value to the right of a list only if key exists
+   * @param {String} key - the key
+   * @param {*} val - the value to be pushed
+   * @returns {Number} new length of the list
+   */
   function lpushx(key, val) {
     return lpush(key, val, true);
   }
 
+  /**
+   * Get a range of values in a list associated with a key
+   * @param {String} key - the key
+   * @param {Number} start - start index
+   * @param {Number} end - end index
+   * @returns {Array} the range of values
+   */
   function lrange(key, start, end) {
     let arr = store.get(key);
     if (!Array.isArray(arr)) {
@@ -176,7 +215,13 @@
     return copy.splice(start, _end)
   }
 
-
+  /**
+   * Insert a value before or after a pivot value in a list associated with key
+   * @param {String} key - the key
+   * @param {String} beforeAfter - 'BEFORE' or 'AFTER'
+   * @param {*} pivot - pivot value
+   * @returns {Number} the new length of the list
+   */
   function linsert(key, beforeAfter, pivot, val) {
     let arr = store.get(key);
     if (!Array.isArray(arr)) {
@@ -198,4 +243,4 @@
     set, get, lindex, lpush, lpushx, lpop, lrange, linsert, rpop, rpush, rpushx, store, stream
   };
 
-})(); * /
+})();
