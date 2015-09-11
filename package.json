@@ -1,0 +1,27 @@
+{
+  "name": "norns",
+  "version": "0.0.1",
+  "description": "replicable redis-like key value store for node",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "demo": "browserify example.js -t babelify --outfile demo.js && node demo.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/techfort/norns.git"
+  },
+  "keywords": [
+    "redis",
+    "key",
+    "value",
+    "replication",
+    "cache"
+  ],
+  "author": "joe minichino <joe.minichino@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/techfort/norns/issues"
+  },
+  "homepage": "https://github.com/techfort/norns#readme"
+}
