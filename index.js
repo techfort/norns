@@ -29,7 +29,7 @@
   function pop(store, key, lr) {
     let newstore = Object.assign({}, store);
     if (newstore[key] && Array.isArray(newstore[key])) {
-      newstore[key][lr === 'lpop' ? 'unshift' : 'pop']();
+      newstore[key][lr === 'lpop' ? 'shift' : 'pop']();
     }
     return newstore;
   }
@@ -58,7 +58,7 @@
 
 
   module.exports = {
-    set, get, lpush, stream
+    set, get, lpush, lpop, rpop, stream
   };
 
 })();

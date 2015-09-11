@@ -6,6 +6,8 @@ var _require = require('./index');
 var set = _require.set;
 var get = _require.get;
 var lpush = _require.lpush;
+var lpop = _require.lpop;
+var rpop = _require.rpop;
 var stream = _require.stream;
 
 var store = {};
@@ -13,7 +15,13 @@ var store = {};
 store = set(store, 'foo', 'bar');
 store = lpush(store, 'mylist', 'joe');
 store = lpush(store, 'mylist', 'jack');
+store = lpush(store, 'mylist', 'jim');
+store = lpush(store, 'mylist', 'jill');
 console.log(store, stream);
+
+store = lpop(store, 'mylist');
+store = rpop(store, 'mylist');
+console.log(store);
 
 },{"./index":2}],2:[function(require,module,exports){
 'use strict';
@@ -36,6 +44,22 @@ console.log(store, stream);
 
   function get(store, key) {
     return store[key] || null;
+  }
+
+  function lpop(store, key) {
+    return pop(store, key, 'lpop');
+  }
+
+  function rpop(store, key) {
+    return pop(store, key, 'rpop');
+  }
+
+  function pop(store, key, lr) {
+    var newstore = Object.assign({}, store);
+    if (newstore[key] && Array.isArray(newstore[key])) {
+      newstore[key][lr === 'lpop' ? 'shift' : 'pop']();
+    }
+    return newstore;
   }
 
   function lpush(store, key, val) {
@@ -61,7 +85,7 @@ console.log(store, stream);
   }
 
   module.exports = {
-    set: set, get: get, lpush: lpush, stream: stream
+    set: set, get: get, lpush: lpush, lpop: lpop, rpop: rpop, stream: stream
   };
 })();
 
