@@ -5,11 +5,15 @@ var _require = require('./index');
 
 var set = _require.set;
 var get = _require.get;
+var lindex = _require.lindex;
 var lpush = _require.lpush;
+var lpushx = _require.lpushx;
 var lpop = _require.lpop;
 var lrange = _require.lrange;
 var linsert = _require.linsert;
 var rpop = _require.rpop;
+var rpush = _require.rpush;
+var rpushx = _require.rpushx;
 var store = _require.store;
 var stream = _require.stream;
 
@@ -23,7 +27,13 @@ lpop('mylist');
 lpush('mylist', 'jill');
 linsert('mylist', 'BEFORE', 'john', 'QUUX!');
 linsert('mylist', 'AFTER', 'QUUX!', 'BAR');
+rpushx('rpushxlist', 'try and fail');
+rpush('rpushxlist', 'try and succeed');
+rpushx('rpushxlist', 'try and succeed again');
 console.log(store, stream);
+console.log(lrange('mylist', 0, -1));
+console.log('lindex [3]:', lindex('mylist', 3));
+console.log('lindex [-2]:', lindex('mylist', -2));
 
 rpop('mylist');
 console.log(store);
@@ -37,7 +47,9 @@ setTimeout(function () {
 
 (function () {
   var stream = [],
-      store = new Map();
+      store = new Map(),
+      counter = 1,
+      server = 1;
 
   function setExpire(key, ms) {
     if (!ms) {
@@ -84,7 +96,7 @@ setTimeout(function () {
     return store.get(key).length || new Error('key ' + key + ' is not a list');
   }
 
-  function rpush(key, val) {
+  function rpush(key, val, x) {
 
     var event = {
       event: 'lpush',
@@ -98,26 +110,38 @@ setTimeout(function () {
     var arr = store.get(key);
     if (arr) {
       if (Array.isArray(arr)) {
-        store.set(key, arr.push(val));
+        arr.push(val);
+        store.set(key, arr);
       } else {
         store.set(key, [val]);
       }
     } else {
+      // rpushx
+      if (x) {
+        return 0;
+      }
       store.set(key, [val]);
     }
     return llen(key);
   }
 
-  function lpush(key, val) {
+  function rpushx(key, val) {
+    return rpush(key, val, true);
+  }
 
-    var event = {
-      event: 'rpush',
-      key: key,
-      value: val,
-      when: new Date().getTime()
-    };
+  function lindex(key, index) {
+    var arr = store.get(key);
+    console.log('LIST', arr, arr.length);
+    var computedIndex = index < 0 ? arr.length + index : index;
+    console.log('COMPUTED INDEX:', computedIndex, 'LENGTH: ', arr.length);
+    if (computedIndex > arr.length - 1) {
+      throw new Error('Index out of range for list at key: [' + key + ']');
+    }
 
-    stream.push(event);
+    return arr[computedIndex];
+  }
+
+  function lpush(key, val, x) {
 
     var arr = store.get(key);
 
@@ -129,10 +153,26 @@ setTimeout(function () {
         store.set(key, [val]);
       }
     } else {
+      // lpushx
+      if (x) {
+        return 0;
+      }
       store.set(key, [val]);
     }
 
+    var event = {
+      event: 'rpush',
+      key: key,
+      value: val,
+      when: new Date().getTime()
+    };
+
+    stream.push(event);
     return llen(key);
+  }
+
+  function lpushx(key, val) {
+    return lpush(key, val, true);
   }
 
   function lrange(key, start, end) {
@@ -142,7 +182,8 @@ setTimeout(function () {
     }
     var _end = end === -1 ? arr.length : end;
     _end = _end > arr.length ? arr.length : _end;
-    return arr.splice(start, _end);
+    var copy = Object.assign([], arr);
+    return copy.splice(start, _end);
   }
 
   function linsert(key, beforeAfter, pivot, val) {
@@ -163,7 +204,7 @@ setTimeout(function () {
   }
 
   module.exports = {
-    set: set, get: get, lpush: lpush, lpop: lpop, lrange: lrange, linsert: linsert, rpop: rpop, store: store, stream: stream
+    set: set, get: get, lindex: lindex, lpush: lpush, lpushx: lpushx, lpop: lpop, lrange: lrange, linsert: linsert, rpop: rpop, rpush: rpush, rpushx: rpushx, store: store, stream: stream
   };
 })();
 
