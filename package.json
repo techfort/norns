@@ -23,5 +23,6 @@
   "bugs": {
     "url": "https://github.com/techfort/norns/issues"
   },
-  "homepage": "https://github.com/techfort/norns#readme"
+  "homepage": "https://github.com/techfort/norns#readme",
+  "devDependencies": {}
 }
