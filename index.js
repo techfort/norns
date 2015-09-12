@@ -10,12 +10,21 @@
    * @param {Number} ms - milliseconds to expiration
    */
   function setExpire(key, ms) {
-    if (!ms) {
+    if (!ms || ms === -1) {
       return;
     }
     setTimeout(() => {
       store.delete(key);
     }, ms);
+  }
+
+  function event(evtName, key, ...args) {
+    stream.push({
+      event: evtName,
+      when: new Date().getTime(),
+      args: args,
+      key: key
+    });
   }
 
   /**
@@ -29,7 +38,7 @@
     let event = {
       event: 'set',
       key: key,
-      value: val,
+      args: [val, ms || -1],
       when: new Date().getTime()
     };
     stream.push(event);
@@ -98,7 +107,7 @@
     let event = {
       event: 'lpush',
       key: key,
-      value: val,
+      args: [val],
       when: new Date().getTime()
     };
 
