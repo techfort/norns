@@ -4,7 +4,7 @@
   "description": "replicable redis-like key value store for node",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "browserify tests/test.js -t babelify --outfile tests/babeltest.js && tape tests/babeltest.js && rm tests/babeltest.js",
     "demo": "browserify example.js -t babelify --outfile demo.js && node demo.js"
   },
   "repository": {
@@ -24,5 +24,8 @@
     "url": "https://github.com/techfort/norns/issues"
   },
   "homepage": "https://github.com/techfort/norns#readme",
-  "devDependencies": {}
+  "devDependencies": {
+    "tape": "^4.2.0",
+    "tape-run": "^1.1.0"
+  }
 }
