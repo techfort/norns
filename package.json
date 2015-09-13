@@ -4,7 +4,7 @@
   "description": "replicable redis-like key value store for node",
   "main": "index.js",
   "scripts": {
-    "test": "babel-tape-runner tests/*.js",
+    "test": "babel-tape-runner tests/*.js | coverify",
     "demo": "browserify example.js -t babelify --outfile demo.js && node demo.js"
   },
   "repository": {
@@ -26,6 +26,7 @@
   "homepage": "https://github.com/techfort/norns#readme",
   "devDependencies": {
     "babel-tape-runner": "^1.2.0",
+    "coverify": "^1.4.1",
     "tape": "^4.2.0",
     "tape-run": "^1.1.0"
   }

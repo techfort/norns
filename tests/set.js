@@ -3,7 +3,6 @@ let test = require('tape'),
   ds = N(1);
 
 test('SET', (t) => {
-
   ds.set('foo', 'bar');
   t.ok(ds.get('foo'), 'bar');
   t.end();

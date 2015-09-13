@@ -252,7 +252,6 @@
       },
       store: store,
       stream: stream
-
     };
     return API;
   }
