@@ -20,14 +20,19 @@
         }, ms);
       },
 
+      /**
+       * Logs the event, not exposed.
+       */
       logEvent: (evtName, key, ...args) => {
         stream.push({
           event: evtName,
           when: new Date().getTime(),
           args: args,
           key: key,
-          server: server
+          server: server,
+          id: counter
         });
+        counter += 1;
       },
 
       /**
@@ -38,13 +43,7 @@
        * @returns {*} the value set to the key
        */
       set: (key, val, ms) => {
-        let event = {
-          event: 'set',
-          key: key,
-          args: [val, ms || -1],
-          when: new Date().getTime()
-        };
-        stream.push(event);
+        API.logEvent('set', key, [val, ms || -1]);
         store.set(key, val);
         API.setExpire(key, ms);
         return val;
@@ -67,6 +66,7 @@
       pop: (key, lr) => {
         if (store.get(key) && Array.isArray(store.get(key))) {
           store.get(key)[lr === 'lpop' ? 'shift' : 'pop']();
+          API.logEvent(lr, key, []);
         }
         return store.get(key).length;
       },
@@ -99,52 +99,6 @@
       },
 
       /**
-       * Push value to the right of a list
-       * @param {String} key - the key
-       * @param {*} val - the value to be pushed
-       * @param {boolean} [x] - only push if key exists
-       * @returns {Number} new length of the list
-       */
-      rpush: (key, val, x) => {
-
-        let event = {
-          event: 'lpush',
-          key: key,
-          args: [val],
-          when: new Date().getTime()
-        };
-
-        stream.push(event);
-
-        let arr = store.get(key);
-        if (arr) {
-          if (Array.isArray(arr)) {
-            arr.push(val)
-            store.set(key, arr);
-          } else {
-            store.set(key, [val]);
-          }
-        } else {
-          // rpushx
-          if (x) {
-            return 0;
-          }
-          store.set(key, [val]);
-        }
-        return API.llen(key);
-      },
-
-      /**
-       * Push value to the right of a list only if key exists
-       * @param {String} key - the key
-       * @param {*} val - the value to be pushed
-       * @returns {Number} new length of the list
-       */
-      rpushx: (key, val) => {
-        return API.rpush(key, val, true);
-      },
-
-      /**
        * Get value at 'index' of a list associated with a key
        * @param {String} key - the key
        * @param {Number} index - the index
@@ -162,22 +116,16 @@
         return arr[computedIndex];
       },
 
-      /**
-       * Push value to the left of a list
-       * @param {String} key - the key
-       * @param {*} val - the value to be pushed
-       * @param {boolean} [x] - only push if key exists
-       * @returns {Number} new length of the list
-       */
-      lpush: (key, val, x) => {
-
+      push: (dir, key, val, x) => {
         let arr = store.get(key);
 
         if (arr) {
           if (Array.isArray(arr)) {
-            arr.unshift(val);
+            API.logEvent(dir, key, [val, x || false]);
+            arr[dir === 'lpush' ? 'unshift' : 'push'](val);
             store.set(key, arr);
           } else {
+            API.logEvent(dir, key, [val, x || false]);
             store.set(key, [val]);
           }
         } else {
@@ -188,15 +136,18 @@
           store.set(key, [val]);
         }
 
-        let event = {
-          event: 'rpush',
-          key: key,
-          value: val,
-          when: new Date().getTime()
-        };
-
-        stream.push(event);
         return API.llen(key);
+      },
+
+      /**
+       * Push value to the left of a list
+       * @param {String} key - the key
+       * @param {*} val - the value to be pushed
+       * @param {boolean} [x] - only push if key exists
+       * @returns {Number} new length of the list
+       */
+      lpush: (key, val) => {
+        return API.push('lpush', key, val, false);
       },
 
       /**
@@ -207,6 +158,27 @@
        */
       lpushx: (key, val) => {
         return API.lpush(key, val, true);
+      },
+
+      /**
+       * Push value to the right of a list
+       * @param {String} key - the key
+       * @param {*} val - the value to be pushed
+       * @param {boolean} [x] - only push if key exists
+       * @returns {Number} new length of the list
+       */
+      rpush: (key, val) => {
+        return API.push('rpush', key, val, false);
+      },
+
+      /**
+       * Push value to the right of a list only if key exists
+       * @param {String} key - the key
+       * @param {*} val - the value to be pushed
+       * @returns {Number} new length of the list
+       */
+      rpushx: (key, val) => {
+        return API.rpush(key, val, true);
       },
 
       /**
