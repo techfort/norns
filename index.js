@@ -21,7 +21,7 @@
       },
 
       /**
-       * Logs the event, not exposed.
+       * Logs the event.
        */
       logEvent: (evtName, key, ...args) => {
         stream.push({
@@ -35,6 +35,24 @@
         counter += 1;
       },
 
+      /**
+       * method to re-apply loaded events to the store
+       */
+      applyEvent: (event) => {
+        let args = [key];
+        args.push(event.args);
+        API[event.event].apply(null, args);
+      },
+
+      /**
+       * method to load the json of a stream dump
+       */
+      loadStream: (json) => {
+        stream = JSON.parse(json);
+        stream.forEach((event) => {
+
+        });
+      },
       /**
        * Sets a key in the datastore to a value and optionally sets expiration time
        * @param {String} key - the key to be set
