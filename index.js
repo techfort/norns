@@ -6,53 +6,7 @@
       counter = 1,
       server = serverId;
     const API = {
-      /**
-       * Set expiration time for a key in milliseconds
-       * @param {String} key - the datastore key
-       * @param {Number} ms - milliseconds to expiration
-       */
-      setExpire: (key, ms) => {
-        if (!ms || ms === -1) {
-          return;
-        }
-        setTimeout(() => {
-          store.delete(key);
-        }, ms);
-      },
 
-      /**
-       * Logs the event.
-       */
-      logEvent: (evtName, key, ...args) => {
-        stream.push({
-          event: evtName,
-          when: new Date().getTime(),
-          args: args,
-          key: key,
-          server: server,
-          id: counter
-        });
-        counter += 1;
-      },
-
-      /**
-       * method to re-apply loaded events to the store
-       */
-      applyEvent: (event) => {
-        let args = [key];
-        args.push(event.args);
-        API[event.event].apply(null, args);
-      },
-
-      /**
-       * method to load the json of a stream dump
-       */
-      loadStream: (json) => {
-        stream = JSON.parse(json);
-        stream.forEach((event) => {
-
-        });
-      },
       /**
        * Sets a key in the datastore to a value and optionally sets expiration time
        * @param {String} key - the key to be set
@@ -73,6 +27,34 @@
        */
       get: (key) => {
         return store.get(key);
+      },
+
+      /**
+       * get range between start and end of value stored at key
+       * @param {String} key - the key in the datastore
+       * @param {Number} start - start index
+       * @param {Number} end - end index
+       * @returns {String} substring between start and end
+       */
+      getrange: (key, start, end) => {
+        let value = store.get(key),
+          computedEnd = end < 0 ? (value.length - end) : end;
+        return value ? value.substring(start, computedEnd) : '';
+      },
+
+      /**
+       * Append a value to an existing key
+       * @param {String} key - the key in the datastore
+       * @param {String} value - the value to append
+       * @returns {Number} the new length of the value
+       */
+      append: (key, val) => {
+        let value = store.get(key),
+          len = value ? 0 : (value + val).length;
+        if (value) {
+          store.set(key, '' + value + val);
+        }
+        return len;
       },
 
       /**
@@ -130,10 +112,18 @@
         if (computedIndex > arr.length - 1) {
           throw new Error(`Index out of range for list at key: [${key}]`);
         }
-
         return arr[computedIndex];
       },
 
+      /**
+       * Push value either to the left or right of a list
+       * Don't use this directly, use lpush or rpush
+       *
+       * @param {String} key - the key
+       * @param {*} val - the value to be pushed
+       * @param {boolean} [x] - only push if key exists
+       * @returns {Number} new length of the list
+       */
       push: (dir, key, val, x) => {
         let arr = store.get(key);
 
@@ -239,6 +229,54 @@
         store.set(key, arr);
 
         return API.llen(key);
+      },
+
+      /**
+       * Set expiration time for a key in milliseconds
+       * @param {String} key - the datastore key
+       * @param {Number} ms - milliseconds to expiration
+       */
+      setExpire: (key, ms) => {
+        if (!ms || ms === -1) {
+          return;
+        }
+        setTimeout(() => {
+          store.delete(key);
+        }, ms);
+      },
+
+      /**
+       * Logs the event.
+       */
+      logEvent: (evtName, key, ...args) => {
+        stream.push({
+          event: evtName,
+          when: new Date().getTime(),
+          args: args,
+          key: key,
+          server: server,
+          id: counter
+        });
+        counter += 1;
+      },
+
+      /**
+       * method to re-apply loaded events to the store
+       */
+      applyEvent: (event) => {
+        let args = [key];
+        args.push(event.args);
+        API[event.event].apply(null, args);
+      },
+
+      /**
+       * method to load the json of a stream dump
+       */
+      loadStream: (json) => {
+        stream = JSON.parse(json);
+        stream.forEach((event) => {
+
+        });
       },
       store: store,
       stream: stream
